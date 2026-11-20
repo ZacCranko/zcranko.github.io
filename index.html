@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zachary Cranko</title>
+  <meta name="description" content="Zachary Cranko — High-performance infrastructure and tooling for machine learning at Google DeepMind.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..600;1,14..32,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fbfbfb;
+      --surface-hover: rgba(0, 0, 0, 0.032);
+      --ink: #1d1d1f;
+      --ink-secondary: #5e5e63;
+      --ink-tertiary: #86868b;
+      --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0b0c;
+        --surface-hover: rgba(255, 255, 255, 0.045);
+        --ink: #f5f5f7;
+        --ink-secondary: #a1a1a6;
+        --ink-tertiary: #6e6e73;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      text-rendering: optimizeLegibility;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      font-size: 15.5px;
+      font-weight: 400;
+      line-height: 1.64;
+      letter-spacing: -0.01em;
+      padding: 96px 28px 128px;
+    }
+
+    main {
+      max-width: 620px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 68px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 4vw, 34px);
+      font-weight: 500;
+      letter-spacing: -0.032em;
+      line-height: 1.12;
+      margin-bottom: 6px;
+    }
+
+    .location {
+      font-size: 16px;
+      letter-spacing: -0.012em;
+      color: var(--ink-tertiary);
+      margin-bottom: 28px;
+    }
+
+    .opening {
+      font-size: 16px;
+      font-weight: 400;
+      letter-spacing: -0.012em;
+      line-height: 1.62;
+      color: var(--ink-secondary);
+      margin-bottom: 16px;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 26px;
+      font-size: 14px;
+      letter-spacing: -0.006em;
+    }
+
+    nav a {
+      color: var(--ink-secondary);
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      color: var(--ink);
+    }
+
+    .email-link {
+      display: inline-grid;
+    }
+
+    .email-link > span {
+      grid-area: 1 / 1;
+      transition: opacity 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .email-copied {
+      opacity: 0;
+      color: var(--ink);
+      pointer-events: none;
+    }
+
+    .email-link.is-copied .email-default {
+      opacity: 0;
+      transition-duration: 110ms;
+    }
+
+    .email-link.is-copied .email-copied {
+      opacity: 1;
+      transition-duration: 110ms;
+    }
+
+    section {
+      margin-bottom: 60px;
+    }
+
+    section:last-child {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.006em;
+      color: var(--ink-tertiary);
+      margin-bottom: 18px;
+    }
+
+    .section-intro {
+      color: var(--ink-secondary);
+      font-size: 15px;
+      line-height: 1.64;
+      margin-bottom: 22px;
+    }
+
+    .entries {
+      list-style: none;
+    }
+
+    .entry {
+      margin-bottom: 22px;
+    }
+
+    .entry:last-child {
+      margin-bottom: 0;
+    }
+
+    .entry-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .entry-title {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.014em;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
+    .entry-meta {
+      font-size: 13.5px;
+      font-variant-numeric: tabular-nums;
+      color: var(--ink-tertiary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .entry-sub {
+      font-size: 14px;
+      color: var(--ink-secondary);
+      margin-top: 3px;
+      line-height: 1.54;
+    }
+
+    .pub-list {
+      list-style: none;
+      margin: -10px -14px;
+    }
+
+    .pub-link {
+      display: block;
+      padding: 11px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .pub-link:hover {
+      background: var(--surface-hover);
+    }
+
+    .pub-arrow {
+      font-size: 12px;
+      color: var(--ink-tertiary);
+      margin-left: 1px;
+    }
+
+    .pub-link:hover .pub-arrow {
+      color: var(--ink);
+    }
+
+    .self {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .math {
+      font-family: "STIX Two Math", "Latin Modern Math", "Cambria Math", "Times New Roman", Georgia, serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 1.08em;
+      padding-right: 0.06em;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 52px 20px 88px;
+      }
+
+      header {
+        margin-bottom: 52px;
+      }
+
+      section {
+        margin-bottom: 48px;
+      }
+
+      .entry-head {
+        flex-direction: column;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Zachary Cranko</h1>
+      <div class="location">San Francisco, California</div>
+      <p class="opening">
+        I build high-performance infrastructure and tooling for machine learning at Google DeepMind. I tend to take hard, slow, or poorly understood systems and rebuild them from scratch so they run fast and get out of the way.
+      </p>
+      <p class="opening">
+        Before machine learning, I worked on film and television scores for US and UK productions, went back to university for economics and a PhD in statistical learning theory, and joined Midjourney as its tenth employee.
+      </p>
+      <nav aria-label="Links">
+        <a href="https://scholar.google.com/citations?user=ny0DT3UAAAAJ&amp;hl=en">Google Scholar</a>
+        <a href="https://github.com/ZacCranko">GitHub</a>
+        <a href="https://www.linkedin.com/in/zac-cranko/">LinkedIn</a>
+        <a href="https://www.imdb.com/name/nm4827322/">IMDb</a>
+        <a href="#contact" id="email-link" class="email-link"><span class="email-default">Email</span><span class="email-copied" aria-hidden="true">Copied</span></a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>Now</h2>
+      <div class="content">
+        <p class="section-intro">
+          At Google DeepMind (2026 – Present), I build high-throughput, low-latency infrastructure and developer tooling operating over heavy daily data volumes, used primarily by the Gemini teams alongside engineers and agents across research and engineering.
+        </p>
+        <p class="section-intro" style="margin-bottom: 0;">
+          Most of my code is in Rust, C++, Python, and Swift, working close to JAX, XLA, and accelerator hardware, with custom GPU-rendered interfaces when standard tools can't keep up.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Earlier</h2>
+      <div class="content">
+        <ul class="entries">
+          <li class="entry">
+            <div class="entry-head">
+              <div class="entry-title">JAX Team, Google</div>
+              <div class="entry-meta">2025</div>
+            </div>
+            <div class="entry-sub">
+              Built profiling infrastructure, debugging tools, and a bespoke trace viewer for kernel engineering. The viewer was written in C++, ran in the browser via WebAssembly and WebGPU, and paired with a backend service.
+            </div>
+          </li>
+          <li class="entry">
+            <div class="entry-head">
+              <div class="entry-title">Midjourney</div>
+              <div class="entry-meta">2022 – 2024</div>
+            </div>
+            <div class="entry-sub">
+              Tenth employee and Research Scientist. Built core training infrastructure and derived Midjourney's proprietary image-generation sampling algorithm.
+            </div>
+          </li>
+          <li class="entry">
+            <div class="entry-head">
+              <div class="entry-title">University of Tübingen</div>
+              <div class="entry-meta">2021 – 2022</div>
+            </div>
+            <div class="entry-sub">
+              Postdoctoral Research Fellow studying self-supervised vision with Wieland Brendel and Matthias Bethge.
+            </div>
+          </li>
+          <li class="entry">
+            <div class="entry-head">
+              <div class="entry-title">Learning Theory &amp; Econometrics</div>
+              <div class="entry-meta">2012 – 2020</div>
+            </div>
+            <div class="entry-sub">
+              PhD in Computer Science (Australian National University, supervised by Robert C. Williamson, Richard Nock, and Mark D. Reid) and Bachelor of Economics with Honours (ANU, supervised by Simon Grant and Mark D. Reid). Also consulted briefly on the rewrite of the Federal Reserve Bank of New York's econometric models and wrote code for Thomas J. Sargent and John Stachurski's QuantEcon.
+            </div>
+          </li>
+          <li class="entry">
+            <div class="entry-head">
+              <div class="entry-title">Film &amp; Television Scores</div>
+              <div class="entry-meta">2009 – 2014</div>
+            </div>
+            <div class="entry-sub">
+              Film Scoring Certificate at UCLA (2011). Technical score engineer for Alex Heffes, music programmer for Sheridan Tongue, and assistant at Hans Zimmer's Remote Control Productions (Rupert Gregson-Williams, Christopher Willis). Credits include <em>Into the Universe with Stephen Hawking</em>, <em>Wonders of the Solar System</em>, <em>Silent Witness</em>, <em>Here Comes the Boom</em>, <em>Love and Honor</em>, and <em>DCI Banks</em>.
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Papers</h2>
+      <div class="content">
+        <p class="section-intro">
+          My academic work is on the mathematical structure of learning problems, especially convex loss geometry, information–risk equalities, distributional robustness, and differential privacy.
+        </p>
+        <ul class="pub-list">
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/2207.11987">
+              <div class="entry-head">
+                <div class="entry-title">Information Processing Equalities and the Information–Risk Bridge&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">JMLR 2024</div>
+              </div>
+              <div class="entry-sub">Robert C. Williamson, <span class="self">Zac Cranko</span></div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/2209.00238">
+              <div class="entry-head">
+                <div class="entry-title">The Geometry and Calculus of Losses&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">JMLR 2023</div>
+              </div>
+              <div class="entry-sub">Robert C. Williamson, <span class="self">Zac Cranko</span></div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://openreview.net/forum?id=2p_5F9sHN9">
+              <div class="entry-head">
+                <div class="entry-title">The Geometry of Adversarial Subspaces&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">2022</div>
+              </div>
+              <div class="entry-sub">Dylan M. Paiton, David Schultheiss, Matthias Kümmerer, <span class="self">Zac Cranko</span>, Matthias Bethge</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/2002.04197">
+              <div class="entry-head">
+                <div class="entry-title">Generalised Lipschitz Regularisation Equals Distributional Robustness&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">ICML 2021</div>
+              </div>
+              <div class="entry-sub"><span class="self">Zac Cranko</span>, Zhan Shi, Xinhua Zhang, Richard Nock, Simon Kornblith</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://openresearch-repository.anu.edu.au/items/dcad7ea1-380f-46e8-b718-5df4d68ebf7f">
+              <div class="entry-head">
+                <div class="entry-title">An Analytic Approach to the Structure and Composition of General Learning Problems&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">PhD Thesis 2021</div>
+              </div>
+              <div class="entry-sub"><span class="self">Zac Cranko</span>, Australian National University</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://proceedings.mlr.press/v108/husain20a.html">
+              <div class="entry-head">
+                <div class="entry-title">Local Differential Privacy for Sampling&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">AISTATS 2020</div>
+              </div>
+              <div class="entry-sub">Hisham Husain, Borja Balle, <span class="self">Zac Cranko</span>, Richard Nock</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/1806.02977">
+              <div class="entry-head">
+                <div class="entry-title">Monge Blunts Bayes: Hardness Results for Adversarial Training&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">ICML 2019</div>
+              </div>
+              <div class="entry-sub"><span class="self">Zac Cranko</span>, Aditya Krishna Menon, Richard Nock, Cheng Soon Ong, Zhan Shi, Christian Walder</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/1803.08178">
+              <div class="entry-head">
+                <div class="entry-title">Boosted Density Estimation Remastered&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">ICML 2019</div>
+              </div>
+              <div class="entry-sub"><span class="self">Zac Cranko</span>, Richard Nock</div>
+            </a>
+          </li>
+          <li>
+            <a class="pub-link" href="https://arxiv.org/abs/1707.04385">
+              <div class="entry-head">
+                <div class="entry-title"><span class="math">f</span>-GANs in an Information Geometric Nutshell&nbsp;<span class="pub-arrow" aria-hidden="true">↗</span></div>
+                <div class="entry-meta">NeurIPS 2017</div>
+              </div>
+              <div class="entry-sub">Richard Nock, <span class="self">Zac Cranko</span>, Aditya Krishna Menon, Lizhen Qu, Robert C. Williamson</div>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Interests</h2>
+      <div class="content">
+        <p class="section-intro" style="margin-bottom: 10px;">
+          <strong style="color: var(--ink); font-weight: 500;">Technical:</strong> general topology, convex optimization, robust machine learning, graphics, and accelerator systems.
+        </p>
+        <p class="section-intro" style="margin-bottom: 0;">
+          <strong style="color: var(--ink); font-weight: 500;">Less technical:</strong> modernist cooking and mixology, analogue photography, lamps, synthesizers, olympic weightlifting, begonias, and percale linen.
+        </p>
+      </div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const link = document.getElementById("email-link");
+      if (!link) return;
+      let timer = null;
+      const xor = (arr) => arr.map((c) => String.fromCharCode(c ^ 42)).join("");
+      const copyFallback = (text) => {
+        const area = document.createElement("textarea");
+        area.value = text;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+      };
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const scheme = xor([71,75,67,70,94,69,16]);
+        const addr = xor([83,88,75,66,73,106,80,73,88,75,68,65,69,4,73,69,71]);
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(addr).catch(() => copyFallback(addr));
+        } else {
+          copyFallback(addr);
+        }
+        link.classList.add("is-copied");
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          link.classList.remove("is-copied");
+        }, 1200);
+        if (window.matchMedia("(pointer: coarse)").matches) {
+          window.location.href = scheme + addr;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
