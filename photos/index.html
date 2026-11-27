@@ -101,19 +101,19 @@
     }
 
     .gallery {
-      columns: 3 340px;
-      column-gap: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-start;
     }
 
     .tile {
-      break-inside: avoid;
-      margin-bottom: 16px;
+      flex: 0 0 auto;
       background: var(--surface);
       overflow: hidden;
       cursor: zoom-in;
       position: relative;
       display: block;
-      width: 100%;
       border: none;
       padding: 0;
     }
@@ -241,7 +241,7 @@
       }
 
       .gallery {
-        columns: 1;
+        gap: 12px;
       }
 
       .lb-nav {
@@ -287,9 +287,130 @@
 
     let allPhotos = [];
     let visiblePhotos = [];
+    let tileEls = [];
     let activeAlbum = null;
     let currentIndex = -1;
     let touchStartX = null;
+    let lastLayoutWidth = 0;
+
+    function photoAspect(photo) {
+      return photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1.5;
+    }
+
+    // Optimal Knuth-Plass style DP row partitioning for justified rows.
+    // Preserves exact photo order while keeping row heights balanced and avoiding orphan last rows.
+    function computeJustifiedRows(aspects, containerWidth, gap, targetHeight) {
+      const n = aspects.length;
+      if (n === 0) return [];
+
+      // Single-column stack on narrow/mobile screens.
+      if (containerWidth <= 600) {
+        return aspects.map((r, idx) => ({
+          start: idx,
+          end: idx + 1,
+          height: Math.round(containerWidth / r),
+          justify: true,
+        }));
+      }
+
+      const dp = new Array(n + 1).fill(Infinity);
+      const nextBreak = new Array(n).fill(n);
+      dp[n] = 0;
+
+      for (let i = n - 1; i >= 0; i--) {
+        let sumR = 0;
+        for (let j = i; j < n; j++) {
+          sumR += aspects[j];
+          const count = j - i + 1;
+          const availW = containerWidth - gap * (count - 1);
+          if (availW <= 0) break;
+
+          const rowH = availW / sumR;
+          const isLast = j === n - 1;
+
+          // Stop adding more photos once the row is much shorter than target.
+          if (count > 1 && rowH < targetHeight * 0.45) break;
+
+          let cost;
+          if (isLast && rowH > targetHeight * 1.28) {
+            // Incomplete last row renders left-aligned at targetHeight.
+            const usedW = sumR * targetHeight + gap * (count - 1);
+            const fill = Math.min(1, usedW / containerWidth);
+            cost = 0.15 * Math.pow(1 - fill, 2);
+          } else {
+            const logRatio = Math.log(rowH / targetHeight);
+            cost = logRatio * logRatio;
+          }
+
+          const total = cost + dp[j + 1];
+          if (total < dp[i]) {
+            dp[i] = total;
+            nextBreak[i] = j + 1;
+          }
+        }
+      }
+
+      const rows = [];
+      let i = 0;
+      while (i < n) {
+        const end = nextBreak[i];
+        const count = end - i;
+        let sumR = 0;
+        for (let k = i; k < end; k++) sumR += aspects[k];
+        const availW = containerWidth - gap * (count - 1);
+        const rawH = availW / sumR;
+        const isLast = end === n;
+        const justify = !(isLast && rawH > targetHeight * 1.28);
+        const height = Math.round(justify ? rawH : Math.min(targetHeight, availW / sumR));
+        rows.push({ start: i, end, height, justify });
+        i = end;
+      }
+      return rows;
+    }
+
+    function layoutGallery() {
+      if (!tileEls.length) return;
+      const containerWidth = Math.floor(galleryEl.clientWidth);
+      if (containerWidth <= 0) return;
+      lastLayoutWidth = containerWidth;
+
+      const gap = containerWidth <= 640 ? 12 : 16;
+      const targetHeight = Math.max(220, Math.min(340, containerWidth * 0.28));
+      const aspects = visiblePhotos.map(photoAspect);
+      const rows = computeJustifiedRows(aspects, containerWidth, gap, targetHeight);
+
+      for (const row of rows) {
+        const count = row.end - row.start;
+        if (row.justify) {
+          const availW = containerWidth - gap * (count - 1);
+          let sumR = 0;
+          for (let k = row.start; k < row.end; k++) sumR += aspects[k];
+          const widths = [];
+          let used = 0;
+          for (let k = row.start; k < row.end; k++) {
+            const w = Math.floor((availW * aspects[k]) / sumR);
+            widths.push(w);
+            used += w;
+          }
+          // Distribute rounding remainder so every justified row is flush to the pixel.
+          let rem = availW - used;
+          for (let k = 0; rem > 0; k++, rem--) {
+            widths[k % count] += 1;
+          }
+          for (let k = 0; k < count; k++) {
+            const tile = tileEls[row.start + k];
+            tile.style.width = `${widths[k]}px`;
+            tile.style.height = `${row.height}px`;
+          }
+        } else {
+          for (let k = row.start; k < row.end; k++) {
+            const tile = tileEls[k];
+            tile.style.width = `${Math.round(aspects[k] * row.height)}px`;
+            tile.style.height = `${row.height}px`;
+          }
+        }
+      }
+    }
 
     function formatExif(exif) {
       if (!exif) return '';
@@ -329,6 +450,7 @@
         : allPhotos;
 
       galleryEl.innerHTML = '';
+      tileEls = [];
       if (!visiblePhotos.length) {
         emptyEl.textContent = 'No photographs published yet.';
         emptyEl.hidden = false;
@@ -340,7 +462,6 @@
         const tile = document.createElement('button');
         tile.type = 'button';
         tile.className = 'tile';
-        tile.style.aspectRatio = `${photo.width} / ${photo.height}`;
         tile.setAttribute('aria-label', photo.caption || 'View photograph');
 
         const img = document.createElement('img');
@@ -354,7 +475,20 @@
         tile.appendChild(img);
         tile.addEventListener('click', () => openLightbox(idx));
         galleryEl.appendChild(tile);
+        tileEls.push(tile);
       });
+
+      layoutGallery();
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => {
+        if (Math.floor(galleryEl.clientWidth) !== lastLayoutWidth) {
+          layoutGallery();
+        }
+      }).observe(galleryEl);
+    } else {
+      window.addEventListener('resize', layoutGallery);
     }
 
     function openLightbox(idx) {
