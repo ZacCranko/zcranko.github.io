@@ -221,6 +221,19 @@
       margin-bottom: 22px;
     }
 
+    .section-intro:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-intro.compact {
+      margin-bottom: 10px;
+    }
+
+    .section-intro strong {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
     .entries {
       list-style: none;
     }
@@ -359,20 +372,17 @@
 
     <section>
       <h2>Now</h2>
-      <div class="content">
-        <p class="section-intro">
-          At Google DeepMind (2026 – Present), I build high-throughput, low-latency infrastructure and developer tooling operating over heavy daily data volumes, used primarily by the Gemini teams alongside engineers and agents across research and engineering.
-        </p>
-        <p class="section-intro" style="margin-bottom: 0;">
-          Most of my code is in Rust, C++, Python, and Swift, working close to JAX, XLA, and accelerator hardware, with custom GPU-rendered interfaces when standard tools can't keep up.
-        </p>
-      </div>
+      <p class="section-intro">
+        At Google DeepMind (2026 – Present), I build high-throughput, low-latency infrastructure and developer tooling operating over heavy daily data volumes, used primarily by the Gemini teams alongside engineers and agents across research and engineering.
+      </p>
+      <p class="section-intro">
+        Most of my code is in Rust, C++, Python, and Swift, working close to JAX, XLA, and accelerator hardware, with custom GPU-rendered interfaces when standard tools can't keep up.
+      </p>
     </section>
 
     <section>
       <h2>Earlier</h2>
-      <div class="content">
-        <ul class="entries">
+      <ul class="entries">
           <li class="entry">
             <div class="entry-head">
               <div class="entry-title">JAX Team, Google</div>
@@ -419,16 +429,14 @@
             </div>
           </li>
         </ul>
-      </div>
     </section>
 
     <section>
       <h2>Papers</h2>
-      <div class="content">
-        <p class="section-intro">
-          My academic work is on the mathematical structure of learning problems, especially convex loss geometry, information–risk equalities, distributional robustness, and differential privacy.
-        </p>
-        <ul class="pub-list">
+      <p class="section-intro">
+        My academic work is on the mathematical structure of learning problems, especially convex loss geometry, information–risk equalities, distributional robustness, and differential privacy.
+      </p>
+      <ul class="pub-list">
           <li>
             <a class="pub-link" href="https://jmlr.org/papers/v25/22-0988.html">
               <div class="entry-head">
@@ -511,19 +519,16 @@
             </a>
           </li>
         </ul>
-      </div>
     </section>
 
     <section>
       <h2>Interests</h2>
-      <div class="content">
-        <p class="section-intro" style="margin-bottom: 10px;">
-          <strong style="color: var(--ink); font-weight: 500;">Technical:</strong> general topology, convex optimization, robust machine learning, graphics, and accelerator systems.
-        </p>
-        <p class="section-intro" style="margin-bottom: 0;">
-          <strong style="color: var(--ink); font-weight: 500;">Less technical:</strong> modernist cooking and mixology, <a class="quiet-link" href="/photos/">analogue photography</a>, lamps, synthesizers, olympic weightlifting, begonias, and percale linen.
-        </p>
-      </div>
+      <p class="section-intro compact">
+        <strong>Technical:</strong> general topology, convex optimization, robust machine learning, graphics, and accelerator systems.
+      </p>
+      <p class="section-intro">
+        <strong>Less technical:</strong> modernist cooking and mixology, <a class="quiet-link" href="/photos/">analogue photography</a>, lamps, synthesizers, olympic weightlifting, begonias, and percale linen.
+      </p>
     </section>
   </main>
   <script>
