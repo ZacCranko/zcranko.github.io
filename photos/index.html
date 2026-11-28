@@ -425,11 +425,26 @@
       });
     }
 
+    const revealObserver = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const img = entry.target;
+          if (img.loading === 'lazy') img.loading = 'eager';
+          if (img.complete && img.naturalWidth > 0) {
+            img.classList.add('loaded');
+            revealObserver.unobserve(img);
+          }
+        }
+      }, { rootMargin: '800px 0px' })
+      : null;
+
     function renderGallery() {
       visiblePhotos = activeAlbum
         ? allPhotos.filter((p) => p.album === activeAlbum)
         : allPhotos;
 
+      if (revealObserver) revealObserver.disconnect();
       galleryEl.innerHTML = '';
       tileEls = [];
       if (!visiblePhotos.length) {
@@ -438,6 +453,8 @@
         return;
       }
       emptyEl.hidden = true;
+
+      const imgsToLoad = [];
 
       visiblePhotos.forEach((photo, idx) => {
         const cell = document.createElement('div');
@@ -449,21 +466,37 @@
         tile.setAttribute('aria-label', photo.caption || 'View photograph');
 
         const img = document.createElement('img');
-        img.src = photo.thumbUrl;
         img.alt = photo.caption || '';
-        img.loading = idx < 6 ? 'eager' : 'lazy';
+        img.width = photo.width || 0;
+        img.height = photo.height || 0;
         img.decoding = 'async';
-        img.addEventListener('load', () => img.classList.add('loaded'));
-        if (img.complete) img.classList.add('loaded');
+        img.loading = idx < 12 ? 'eager' : 'lazy';
+        const markLoaded = () => {
+          img.classList.add('loaded');
+          if (revealObserver) revealObserver.unobserve(img);
+        };
+        img.addEventListener('load', markLoaded, { once: true });
 
         tile.appendChild(img);
         tile.addEventListener('click', () => openLightbox(idx));
         cell.appendChild(tile);
         galleryEl.appendChild(cell);
         tileEls.push(tile);
+        imgsToLoad.push({ img, url: photo.thumbUrl, markLoaded });
       });
 
+      // Size tiles before assigning img.src so iOS Safari's lazy-loader never
+      // observes 0x0 images or misses load events.
       layoutGallery();
+
+      imgsToLoad.forEach(({ img, url, markLoaded }) => {
+        img.src = url;
+        if (img.complete && img.naturalWidth > 0) {
+          markLoaded();
+        } else if (revealObserver) {
+          revealObserver.observe(img);
+        }
+      });
     }
 
     if (typeof ResizeObserver !== 'undefined') {
