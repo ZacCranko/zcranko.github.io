@@ -47,6 +47,7 @@
       text-rendering: optimizeLegibility;
       overflow-x: clip;
       overscroll-behavior-x: none;
+      scrollbar-gutter: stable;
     }
 
     body {
@@ -178,6 +179,9 @@
       height: 100%;
       display: block;
       opacity: 0;
+      transform: scale(1) translateZ(0);
+      backface-visibility: hidden;
+      will-change: transform;
       transition: opacity 320ms ease, transform 1050ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -187,7 +191,7 @@
 
     @media (hover: hover) and (pointer: fine) {
       .tile:hover img.loaded {
-        transform: scale(1.004);
+        transform: scale(1.004) translateZ(0);
       }
     }
 
@@ -466,8 +470,11 @@
       }
     }
 
+    const SCANNER_RE = /\b(noritsu|ez\s*controller|frontier|sp-?(?:500|1500|2000|3000)|flextight|imacon|pakon|coolscan|plustek|epson\s+perfection|vuescan|silverfast|minilab|d-?lab|konica\s+r[12])\b/i;
+
     function formatExif(exif) {
       if (!exif) return '';
+      if (exif.camera && SCANNER_RE.test(exif.camera)) return '';
       return [
         exif.camera,
         exif.focalLength,
@@ -572,6 +579,12 @@
       });
     }
 
+    window.addEventListener('resize', () => {
+      if (currentIndex >= 0 && visiblePhotos[currentIndex]) {
+        sizeLightboxImage(visiblePhotos[currentIndex]);
+      }
+    });
+
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(() => {
         if (Math.floor(galleryEl.clientWidth) !== lastLayoutWidth) {
@@ -637,11 +650,28 @@
       }
     }
 
+    function sizeLightboxImage(photo) {
+      if (!photo) return;
+      const isNarrow = window.innerWidth <= 720;
+      const maxW = Math.min(window.innerWidth * (isNarrow ? 0.94 : 0.92), 1800);
+      const maxH = Math.max(120, window.innerHeight - (isNarrow ? 140 : 124));
+      const r = photoAspect(photo);
+      let w = maxW;
+      let h = w / r;
+      if (h > maxH) {
+        h = maxH;
+        w = h * r;
+      }
+      lbImg.style.width = `${Math.round(w)}px`;
+      lbImg.style.height = `${Math.round(h)}px`;
+    }
+
     function showCurrent() {
       const photo = visiblePhotos[currentIndex];
       if (!photo) return;
       const token = ++loadToken;
 
+      sizeLightboxImage(photo);
       lbImg.alt = photo.caption || '';
       lbCaption.textContent = photo.caption || '';
       lbExif.textContent = formatExif(photo.exif);
