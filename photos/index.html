@@ -70,8 +70,6 @@
       -moz-osx-font-smoothing: grayscale;
       font-feature-settings: "cv02", "cv03", "cv04", "cv11";
       text-rendering: optimizeLegibility;
-      overflow-x: clip;
-      overscroll-behavior-x: none;
       scrollbar-gutter: stable;
     }
 
@@ -82,14 +80,18 @@
       font-size: 15px;
       line-height: 1.6;
       letter-spacing: -0.01em;
-      overflow-x: clip;
-      overscroll-behavior-x: none;
-      touch-action: pan-y pinch-zoom;
       padding:
         max(72px, env(safe-area-inset-top))
         max(28px, env(safe-area-inset-right))
         max(120px, env(safe-area-inset-bottom))
         max(28px, env(safe-area-inset-left));
+    }
+
+    @media (pointer: coarse) {
+      body {
+        overscroll-behavior-x: none;
+        touch-action: pan-y pinch-zoom;
+      }
     }
 
     .shell {
