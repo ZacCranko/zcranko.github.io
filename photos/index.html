@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Photos — Zachary Cranko</title>
   <meta name="description" content="Photographs by Zachary Cranko.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,6 +42,8 @@
       -moz-osx-font-smoothing: grayscale;
       font-feature-settings: "cv02", "cv03", "cv04", "cv11";
       text-rendering: optimizeLegibility;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
     }
 
     body {
@@ -51,7 +53,14 @@
       font-size: 15px;
       line-height: 1.6;
       letter-spacing: -0.01em;
-      padding: 72px 28px 120px;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
+      touch-action: pan-y pinch-zoom;
+      padding:
+        max(72px, env(safe-area-inset-top))
+        max(28px, env(safe-area-inset-right))
+        max(120px, env(safe-area-inset-bottom))
+        max(28px, env(safe-area-inset-left));
     }
 
     .shell {
@@ -152,6 +161,7 @@
       border: none;
       padding: 0;
       max-width: 100%;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .tile img {
@@ -166,8 +176,10 @@
       opacity: 1;
     }
 
-    .tile:hover img.loaded {
-      transform: scale(1.008);
+    @media (hover: hover) and (pointer: fine) {
+      .tile:hover img.loaded {
+        transform: scale(1.008);
+      }
     }
 
     .empty {
@@ -185,7 +197,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 28px 24px 24px;
+      overscroll-behavior: contain;
+      touch-action: none;
+      padding:
+        max(28px, env(safe-area-inset-top))
+        max(24px, env(safe-area-inset-right))
+        max(24px, env(safe-area-inset-bottom))
+        max(24px, env(safe-area-inset-left));
     }
 
     .lightbox.open {
@@ -194,8 +212,8 @@
 
     .lb-close {
       position: fixed;
-      top: 18px;
-      right: 22px;
+      top: max(18px, env(safe-area-inset-top));
+      right: max(22px, env(safe-area-inset-right));
       background: none;
       border: none;
       color: rgba(245, 245, 247, 0.65);
@@ -203,6 +221,7 @@
       line-height: 1;
       cursor: pointer;
       padding: 6px 10px;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .lb-close:hover {
@@ -220,14 +239,15 @@
       cursor: pointer;
       padding: 18px 14px;
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .lb-nav:hover {
       color: #f5f5f7;
     }
 
-    .lb-prev { left: 8px; }
-    .lb-next { right: 8px; }
+    .lb-prev { left: max(8px, env(safe-area-inset-left)); }
+    .lb-next { right: max(8px, env(safe-area-inset-right)); }
 
     .lb-stage {
       flex: 1;
@@ -241,6 +261,7 @@
     .lb-stage img {
       max-width: min(92vw, 1800px);
       max-height: calc(100vh - 110px);
+      max-height: calc(100dvh - 110px);
       width: auto;
       height: auto;
       object-fit: contain;
@@ -268,7 +289,11 @@
 
     @media (max-width: 720px) {
       body {
-        padding: 48px 18px 88px;
+        padding:
+          max(48px, env(safe-area-inset-top))
+          max(18px, env(safe-area-inset-right))
+          max(88px, env(safe-area-inset-bottom))
+          max(18px, env(safe-area-inset-left));
       }
 
       header {
@@ -276,7 +301,7 @@
       }
 
       .gallery {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         row-gap: 40px;
       }
 
@@ -331,6 +356,7 @@
     let activeAlbum = null;
     let currentIndex = -1;
     let touchStartX = null;
+    let touchStartY = null;
     let lastLayoutWidth = 0;
 
     function photoAspect(photo) {
@@ -454,11 +480,13 @@
       currentIndex = idx;
       showCurrent();
       lightboxEl.classList.add('open');
+      document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
     }
 
     function closeLightbox() {
       lightboxEl.classList.remove('open');
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
       currentIndex = -1;
     }
@@ -502,13 +530,21 @@
     });
 
     lightboxEl.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      } else {
+        touchStartX = null;
+        touchStartY = null;
+      }
     }, { passive: true });
     lightboxEl.addEventListener('touchend', (e) => {
-      if (touchStartX === null) return;
+      if (touchStartX === null || touchStartY === null || e.changedTouches.length !== 1) return;
       const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
       touchStartX = null;
-      if (Math.abs(dx) > 48) step(dx < 0 ? 1 : -1);
+      touchStartY = null;
+      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) step(dx < 0 ? 1 : -1);
     }, { passive: true });
 
     (async () => {
