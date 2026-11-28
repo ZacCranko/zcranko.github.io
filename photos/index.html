@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#fbfbfb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b0b0c" media="(prefers-color-scheme: dark)">
   <title>Photos — Zachary Cranko</title>
   <meta name="description" content="Photographs by Zachary Cranko.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +18,7 @@
       --ink: #1d1d1f;
       --ink-secondary: #5e5e63;
       --ink-tertiary: #86868b;
-      --lightbox-bg: rgba(11, 11, 12, 0.96);
+      --lightbox-bg: rgba(251, 251, 251, 0.96);
       --font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
     }
 
@@ -28,6 +30,7 @@
         --ink: #f5f5f7;
         --ink-secondary: #a1a1a6;
         --ink-tertiary: #6e6e73;
+        --lightbox-bg: rgba(11, 11, 12, 0.96);
       }
     }
 
@@ -192,31 +195,69 @@
       inset: 0;
       z-index: 100;
       background: var(--lightbox-bg);
-      color: #f5f5f7;
-      display: none;
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      color: var(--ink);
+      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       overscroll-behavior: contain;
       touch-action: none;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 220ms;
       padding:
-        max(28px, env(safe-area-inset-top))
+        max(52px, calc(env(safe-area-inset-top) + 32px))
         max(24px, env(safe-area-inset-right))
         max(24px, env(safe-area-inset-bottom))
         max(24px, env(safe-area-inset-left));
     }
 
     .lightbox.open {
-      display: flex;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0s;
+    }
+
+    .lightbox.dragging {
+      transition: none;
+    }
+
+    .lb-chrome {
+      transition: opacity 320ms ease, color 160ms ease;
+    }
+
+    .lightbox.idle .lb-chrome {
+      opacity: 0;
+    }
+
+    .lightbox.idle .lb-chrome:hover,
+    .lightbox.idle .lb-chrome:focus-visible {
+      opacity: 1;
+    }
+
+    .lb-counter {
+      position: fixed;
+      top: max(22px, env(safe-area-inset-top));
+      left: max(24px, env(safe-area-inset-left));
+      font-size: 13px;
+      letter-spacing: -0.006em;
+      color: var(--ink-tertiary);
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+      pointer-events: none;
     }
 
     .lb-close {
       position: fixed;
-      top: max(18px, env(safe-area-inset-top));
-      right: max(22px, env(safe-area-inset-right));
+      top: max(14px, env(safe-area-inset-top));
+      right: max(18px, env(safe-area-inset-right));
       background: none;
       border: none;
-      color: rgba(245, 245, 247, 0.65);
+      color: var(--ink-secondary);
       font-size: 26px;
       line-height: 1;
       cursor: pointer;
@@ -225,7 +266,7 @@
     }
 
     .lb-close:hover {
-      color: #f5f5f7;
+      color: var(--ink);
     }
 
     .lb-nav {
@@ -234,7 +275,7 @@
       transform: translateY(-50%);
       background: none;
       border: none;
-      color: rgba(245, 245, 247, 0.45);
+      color: var(--ink-tertiary);
       font-size: 28px;
       cursor: pointer;
       padding: 18px 14px;
@@ -243,7 +284,11 @@
     }
 
     .lb-nav:hover {
-      color: #f5f5f7;
+      color: var(--ink);
+    }
+
+    .lb-nav[hidden] {
+      display: none;
     }
 
     .lb-prev { left: max(8px, env(safe-area-inset-left)); }
@@ -256,16 +301,29 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transform: scale(0.985);
+      transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    .lightbox.open .lb-stage {
+      transform: scale(1);
+    }
+
+    .lightbox.dragging .lb-stage {
+      transition: none;
     }
 
     .lb-stage img {
       max-width: min(92vw, 1800px);
-      max-height: calc(100vh - 110px);
-      max-height: calc(100dvh - 110px);
+      max-height: calc(100vh - 124px);
+      max-height: calc(100dvh - 124px);
       width: auto;
       height: auto;
       object-fit: contain;
       display: block;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     .lb-meta {
@@ -277,13 +335,13 @@
 
     .lb-caption {
       font-size: 14px;
-      color: #f5f5f7;
+      color: var(--ink);
       margin-bottom: 2px;
     }
 
     .lb-exif {
       font-size: 12.5px;
-      color: rgba(245, 245, 247, 0.55);
+      color: var(--ink-tertiary);
       font-variant-numeric: tabular-nums;
     }
 
@@ -327,12 +385,13 @@
   </div>
 
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
-    <button class="lb-close" id="lb-close" type="button" aria-label="Close">&times;</button>
-    <button class="lb-nav lb-prev" id="lb-prev" type="button" aria-label="Previous">&lsaquo;</button>
+    <div class="lb-counter lb-chrome" id="lb-counter" aria-live="polite"></div>
+    <button class="lb-close lb-chrome" id="lb-close" type="button" aria-label="Close">&times;</button>
+    <button class="lb-nav lb-prev lb-chrome" id="lb-prev" type="button" aria-label="Previous">&lsaquo;</button>
     <div class="lb-stage" id="lb-stage">
       <img id="lb-img" alt="">
     </div>
-    <button class="lb-nav lb-next" id="lb-next" type="button" aria-label="Next">&rsaquo;</button>
+    <button class="lb-nav lb-next lb-chrome" id="lb-next" type="button" aria-label="Next">&rsaquo;</button>
     <div class="lb-meta">
       <div class="lb-caption" id="lb-caption"></div>
       <div class="lb-exif" id="lb-exif"></div>
@@ -346,7 +405,11 @@
     const albumsEl = document.getElementById('albums');
     const emptyEl = document.getElementById('empty');
     const lightboxEl = document.getElementById('lightbox');
+    const lbStage = document.getElementById('lb-stage');
     const lbImg = document.getElementById('lb-img');
+    const lbCounter = document.getElementById('lb-counter');
+    const lbPrev = document.getElementById('lb-prev');
+    const lbNext = document.getElementById('lb-next');
     const lbCaption = document.getElementById('lb-caption');
     const lbExif = document.getElementById('lb-exif');
 
@@ -355,8 +418,14 @@
     let tileEls = [];
     let activeAlbum = null;
     let currentIndex = -1;
+    let loadToken = 0;
+    let pushedHistory = false;
+    let idleTimer = null;
     let touchStartX = null;
     let touchStartY = null;
+    let dragAxis = null;
+    let dragDX = 0;
+    let dragDY = 0;
     let lastLayoutWidth = 0;
 
     function photoAspect(photo) {
@@ -509,28 +578,93 @@
       window.addEventListener('resize', layoutGallery);
     }
 
-    function openLightbox(idx) {
+    function wakeChrome() {
+      if (currentIndex < 0) return;
+      lightboxEl.classList.remove('idle');
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        if (currentIndex >= 0) lightboxEl.classList.add('idle');
+      }, 2200);
+    }
+
+    function openLightbox(idx, { fromHash = false } = {}) {
+      const photo = visiblePhotos[idx];
+      if (!photo) return;
+      const wasOpen = currentIndex >= 0;
       currentIndex = idx;
       showCurrent();
+
+      if (!fromHash) {
+        const hash = `#${encodeURIComponent(photo.id)}`;
+        if (!wasOpen) {
+          history.pushState({ photoId: photo.id }, '', hash);
+          pushedHistory = true;
+        } else {
+          history.replaceState({ photoId: photo.id }, '', hash);
+        }
+      }
+
       lightboxEl.classList.add('open');
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
+      wakeChrome();
     }
 
-    function closeLightbox() {
-      lightboxEl.classList.remove('open');
+    function closeLightbox({ fromPopState = false } = {}) {
+      if (currentIndex < 0) return;
+      currentIndex = -1;
+      loadToken++;
+      clearTimeout(idleTimer);
+      lightboxEl.classList.remove('open', 'idle', 'dragging');
+      lightboxEl.style.opacity = '';
+      lbStage.style.transform = '';
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
-      currentIndex = -1;
+
+      if (!fromPopState) {
+        if (pushedHistory) {
+          pushedHistory = false;
+          history.back();
+        } else if (location.hash) {
+          history.replaceState(null, '', location.pathname + location.search);
+        }
+      } else {
+        pushedHistory = false;
+      }
     }
 
     function showCurrent() {
       const photo = visiblePhotos[currentIndex];
       if (!photo) return;
-      lbImg.src = photo.fullUrl;
+      const token = ++loadToken;
+
       lbImg.alt = photo.caption || '';
       lbCaption.textContent = photo.caption || '';
       lbExif.textContent = formatExif(photo.exif);
+      lbCounter.textContent = visiblePhotos.length > 1
+        ? `${currentIndex + 1} / ${visiblePhotos.length}`
+        : '';
+      lbPrev.hidden = visiblePhotos.length < 2;
+      lbNext.hidden = visiblePhotos.length < 2;
+
+      // Show the cached thumbnail immediately, then swap seamlessly to full-res.
+      const hi = new Image();
+      hi.src = photo.fullUrl;
+      if (hi.complete && hi.naturalWidth > 0) {
+        lbImg.src = photo.fullUrl;
+      } else {
+        lbImg.src = photo.thumbUrl;
+        const applyFull = () => {
+          if (token === loadToken) lbImg.src = photo.fullUrl;
+        };
+        if (typeof hi.decode === 'function') {
+          hi.decode().then(applyFull, () => {
+            if (hi.complete && hi.naturalWidth > 0) applyFull();
+          });
+        } else {
+          hi.addEventListener('load', applyFull, { once: true });
+        }
+      }
 
       // Preload adjacent full-resolution images.
       [-1, 1].forEach((delta) => {
@@ -545,14 +679,50 @@
     function step(delta) {
       if (currentIndex < 0 || visiblePhotos.length < 2) return;
       currentIndex = (currentIndex + delta + visiblePhotos.length) % visiblePhotos.length;
+      const photo = visiblePhotos[currentIndex];
       showCurrent();
+      if (photo) {
+        history.replaceState({ photoId: photo.id }, '', `#${encodeURIComponent(photo.id)}`);
+      }
+      wakeChrome();
     }
 
-    document.getElementById('lb-close').addEventListener('click', closeLightbox);
-    document.getElementById('lb-prev').addEventListener('click', () => step(-1));
-    document.getElementById('lb-next').addEventListener('click', () => step(1));
+    function syncFromHash() {
+      const raw = location.hash.slice(1);
+      if (!raw) {
+        if (currentIndex >= 0) closeLightbox({ fromPopState: true });
+        return;
+      }
+      let targetId;
+      try {
+        targetId = decodeURIComponent(raw);
+      } catch {
+        targetId = raw;
+      }
+      let idx = visiblePhotos.findIndex((p) => p.id === targetId);
+      if (idx < 0 && activeAlbum !== null) {
+        activeAlbum = null;
+        renderAlbums();
+        renderGallery();
+        idx = visiblePhotos.findIndex((p) => p.id === targetId);
+      }
+      if (idx >= 0) {
+        openLightbox(idx, { fromHash: true });
+      }
+    }
+
+    document.getElementById('lb-close').addEventListener('click', () => closeLightbox());
+    lbPrev.addEventListener('click', () => step(-1));
+    lbNext.addEventListener('click', () => step(1));
     lightboxEl.addEventListener('click', (e) => {
-      if (e.target === lightboxEl || e.target.id === 'lb-stage') closeLightbox();
+      if (e.target === lightboxEl || e.target === lbStage) {
+        closeLightbox();
+      } else {
+        wakeChrome();
+      }
+    });
+    lightboxEl.addEventListener('pointermove', (e) => {
+      if (e.pointerType !== 'touch') wakeChrome();
     });
 
     window.addEventListener('keydown', (e) => {
@@ -562,23 +732,71 @@
       else if (e.key === 'ArrowLeft') step(-1);
     });
 
+    window.addEventListener('popstate', syncFromHash);
+
     lightboxEl.addEventListener('touchstart', (e) => {
+      wakeChrome();
       if (e.touches.length === 1) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
+        dragAxis = null;
+        dragDX = 0;
+        dragDY = 0;
       } else {
         touchStartX = null;
         touchStartY = null;
+        dragAxis = null;
       }
     }, { passive: true });
-    lightboxEl.addEventListener('touchend', (e) => {
-      if (touchStartX === null || touchStartY === null || e.changedTouches.length !== 1) return;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
+
+    lightboxEl.addEventListener('touchmove', (e) => {
+      if (touchStartX === null || touchStartY === null || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+
+      if (!dragAxis && Math.hypot(dx, dy) > 8) {
+        if (dy > 0 && Math.abs(dy) > Math.abs(dx)) dragAxis = 'y';
+        else if (Math.abs(dx) > Math.abs(dy)) dragAxis = 'x';
+        else dragAxis = 'ignore';
+      }
+
+      if (dragAxis === 'y') {
+        dragDY = Math.max(0, dy);
+        const scale = Math.max(0.88, 1 - dragDY / 1400);
+        const opacity = Math.max(0.15, 1 - dragDY / 360);
+        lightboxEl.classList.add('dragging');
+        lbStage.style.transform = `translate3d(0, ${dragDY}px, 0) scale(${scale})`;
+        lightboxEl.style.opacity = String(opacity);
+      } else if (dragAxis === 'x' && visiblePhotos.length > 1) {
+        dragDX = dx;
+        lightboxEl.classList.add('dragging');
+        lbStage.style.transform = `translate3d(${Math.round(dx * 0.35)}px, 0, 0)`;
+      }
+    }, { passive: true });
+
+    function finishTouch() {
+      const axis = dragAxis;
+      const dx = dragDX;
+      const dy = dragDY;
       touchStartX = null;
       touchStartY = null;
-      if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) step(dx < 0 ? 1 : -1);
-    }, { passive: true });
+      dragAxis = null;
+      dragDX = 0;
+      dragDY = 0;
+
+      lightboxEl.classList.remove('dragging');
+      lbStage.style.transform = '';
+      lightboxEl.style.opacity = '';
+
+      if (axis === 'y' && dy > 90) {
+        closeLightbox();
+      } else if (axis === 'x' && Math.abs(dx) > 48) {
+        step(dx < 0 ? 1 : -1);
+      }
+    }
+
+    lightboxEl.addEventListener('touchend', finishTouch, { passive: true });
+    lightboxEl.addEventListener('touchcancel', finishTouch, { passive: true });
 
     (async () => {
       try {
@@ -588,6 +806,7 @@
         allPhotos = Array.isArray(data.photos) ? data.photos : [];
         renderAlbums();
         renderGallery();
+        syncFromHash();
       } catch (err) {
         emptyEl.textContent = 'Unable to load gallery right now.';
         emptyEl.hidden = false;
