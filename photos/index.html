@@ -75,31 +75,12 @@
       margin-bottom: 72px;
     }
 
-    .header-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 10px;
-    }
-
     h1 {
       font-size: clamp(28px, 4vw, 34px);
       font-weight: 500;
       letter-spacing: -0.032em;
       line-height: 1.12;
-    }
-
-    .home-link {
-      font-size: 14px;
-      letter-spacing: -0.006em;
-      color: var(--ink-tertiary);
-      text-decoration: none;
-      white-space: nowrap;
-    }
-
-    .home-link:hover {
-      color: var(--ink);
+      margin-bottom: 10px;
     }
 
     .intro {
@@ -108,6 +89,31 @@
       line-height: 1.6;
       color: var(--ink-secondary);
       max-width: 560px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-top: 14px;
+      font-size: 14px;
+      letter-spacing: -0.006em;
+      color: var(--ink-tertiary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .home-link .arrow {
+      display: inline-block;
+      transition: transform 0.15s ease;
+    }
+
+    .home-link:hover {
+      color: var(--ink);
+    }
+
+    .home-link:hover .arrow {
+      transform: translateX(2px);
     }
 
     .albums {
@@ -372,11 +378,9 @@
 <body>
   <div class="shell">
     <header>
-      <div class="header-row">
-        <h1>Photos</h1>
-        <a class="home-link" href="/">Zachary Cranko</a>
-      </div>
+      <h1>Photos</h1>
       <p class="intro">Here are some pictures I've taken. With all the tech insanity, looking through a camera is a nice way to feel grounded. Also, optics, cameras, and photographic emulsions are pretty cool too.</p>
+      <a class="home-link" href="/">Me <span class="arrow" aria-hidden="true">&rarr;</span></a>
       <div class="albums" id="albums" role="tablist" aria-label="Albums"></div>
     </header>
 
