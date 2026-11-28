@@ -63,12 +63,31 @@
       margin-bottom: 72px;
     }
 
+    .header-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
     h1 {
       font-size: clamp(28px, 4vw, 34px);
       font-weight: 500;
       letter-spacing: -0.032em;
       line-height: 1.12;
-      margin-bottom: 10px;
+    }
+
+    .home-link {
+      font-size: 14px;
+      letter-spacing: -0.006em;
+      color: var(--ink-tertiary);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .home-link:hover {
+      color: var(--ink);
     }
 
     .intro {
@@ -270,7 +289,10 @@
 <body>
   <div class="shell">
     <header>
-      <h1>Photos</h1>
+      <div class="header-row">
+        <h1>Photos</h1>
+        <a class="home-link" href="/">Zachary Cranko</a>
+      </div>
       <p class="intro">Here are some pictures I've taken. With all the tech insanity, looking through a camera is a nice way to feel grounded. Also, optics, cameras, and photographic emulsions are pretty cool too.</p>
       <div class="albums" id="albums" role="tablist" aria-label="Albums"></div>
     </header>
