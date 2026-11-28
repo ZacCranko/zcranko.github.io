@@ -55,12 +55,12 @@
     }
 
     .shell {
-      max-width: 1240px;
+      max-width: 1120px;
       margin: 0 auto;
     }
 
     header {
-      margin-bottom: 56px;
+      margin-bottom: 72px;
     }
 
     h1 {
@@ -110,14 +110,21 @@
     }
 
     .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: clamp(32px, 5vw, 72px);
+      row-gap: clamp(48px, 7vw, 96px);
+      align-items: center;
+    }
+
+    .cell {
       display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-start;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
     }
 
     .tile {
-      flex: 0 0 auto;
       background: var(--surface);
       overflow: hidden;
       cursor: zoom-in;
@@ -125,13 +132,13 @@
       display: block;
       border: none;
       padding: 0;
+      max-width: 100%;
     }
 
     .tile img {
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: cover;
       opacity: 0;
       transition: opacity 320ms ease, transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
     }
@@ -141,7 +148,7 @@
     }
 
     .tile:hover img.loaded {
-      transform: scale(1.012);
+      transform: scale(1.008);
     }
 
     .empty {
@@ -240,17 +247,18 @@
       font-variant-numeric: tabular-nums;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 720px) {
       body {
-        padding: 48px 16px 88px;
+        padding: 48px 18px 88px;
       }
 
       header {
-        margin-bottom: 36px;
+        margin-bottom: 44px;
       }
 
       .gallery {
-        gap: 12px;
+        grid-template-columns: 1fr;
+        row-gap: 40px;
       }
 
       .lb-nav {
@@ -307,118 +315,33 @@
       return photo.width > 0 && photo.height > 0 ? photo.width / photo.height : 1.5;
     }
 
-    // Optimal Knuth-Plass style DP row partitioning for justified rows.
-    // Preserves exact photo order while keeping row heights balanced and avoiding orphan last rows.
-    function computeJustifiedRows(aspects, containerWidth, gap, targetHeight) {
-      const n = aspects.length;
-      if (n === 0) return [];
-
-      // Single-column stack on narrow/mobile screens.
-      if (containerWidth <= 600) {
-        return aspects.map((r, idx) => ({
-          start: idx,
-          end: idx + 1,
-          height: Math.round(containerWidth / r),
-          justify: true,
-        }));
-      }
-
-      const dp = new Array(n + 1).fill(Infinity);
-      const nextBreak = new Array(n).fill(n);
-      dp[n] = 0;
-
-      for (let i = n - 1; i >= 0; i--) {
-        let sumR = 0;
-        for (let j = i; j < n; j++) {
-          sumR += aspects[j];
-          const count = j - i + 1;
-          const availW = containerWidth - gap * (count - 1);
-          if (availW <= 0) break;
-
-          const rowH = availW / sumR;
-          const isLast = j === n - 1;
-
-          // Stop adding more photos once the row is much shorter than target.
-          if (count > 1 && rowH < targetHeight * 0.45) break;
-
-          let cost;
-          if (isLast && rowH > targetHeight * 1.28) {
-            // Incomplete last row renders left-aligned at targetHeight.
-            const usedW = sumR * targetHeight + gap * (count - 1);
-            const fill = Math.min(1, usedW / containerWidth);
-            cost = 0.15 * Math.pow(1 - fill, 2);
-          } else {
-            const logRatio = Math.log(rowH / targetHeight);
-            cost = logRatio * logRatio;
-          }
-
-          const total = cost + dp[j + 1];
-          if (total < dp[i]) {
-            dp[i] = total;
-            nextBreak[i] = j + 1;
-          }
-        }
-      }
-
-      const rows = [];
-      let i = 0;
-      while (i < n) {
-        const end = nextBreak[i];
-        const count = end - i;
-        let sumR = 0;
-        for (let k = i; k < end; k++) sumR += aspects[k];
-        const availW = containerWidth - gap * (count - 1);
-        const rawH = availW / sumR;
-        const isLast = end === n;
-        const justify = !(isLast && rawH > targetHeight * 1.28);
-        const height = Math.round(justify ? rawH : Math.min(targetHeight, availW / sumR));
-        rows.push({ start: i, end, height, justify });
-        i = end;
-      }
-      return rows;
-    }
-
+    // Equal-area print sizing: a 3:2 landscape and 2:3 portrait occupy the same visual area,
+    // clamped cleanly within each grid column.
     function layoutGallery() {
       if (!tileEls.length) return;
       const containerWidth = Math.floor(galleryEl.clientWidth);
       if (containerWidth <= 0) return;
       lastLayoutWidth = containerWidth;
 
-      const gap = containerWidth <= 640 ? 12 : 16;
-      const targetHeight = Math.max(220, Math.min(340, containerWidth * 0.28));
-      const aspects = visiblePhotos.map(photoAspect);
-      const rows = computeJustifiedRows(aspects, containerWidth, gap, targetHeight);
+      const firstCell = tileEls[0].parentElement;
+      const colW = Math.floor(firstCell ? firstCell.clientWidth : containerWidth);
+      if (colW <= 0) return;
 
-      for (const row of rows) {
-        const count = row.end - row.start;
-        if (row.justify) {
-          const availW = containerWidth - gap * (count - 1);
-          let sumR = 0;
-          for (let k = row.start; k < row.end; k++) sumR += aspects[k];
-          const widths = [];
-          let used = 0;
-          for (let k = row.start; k < row.end; k++) {
-            const w = Math.floor((availW * aspects[k]) / sumR);
-            widths.push(w);
-            used += w;
-          }
-          // Distribute rounding remainder so every justified row is flush to the pixel.
-          let rem = availW - used;
-          for (let k = 0; rem > 0; k++, rem--) {
-            widths[k % count] += 1;
-          }
-          for (let k = 0; k < count; k++) {
-            const tile = tileEls[row.start + k];
-            tile.style.width = `${widths[k]}px`;
-            tile.style.height = `${row.height}px`;
-          }
-        } else {
-          for (let k = row.start; k < row.end; k++) {
-            const tile = tileEls[k];
-            tile.style.width = `${Math.round(aspects[k] * row.height)}px`;
-            tile.style.height = `${row.height}px`;
-          }
-        }
+      const isSingleCol = window.innerWidth <= 720;
+      const targetArea = (colW * colW) / (isSingleCol ? 1.35 : 1.5);
+      const maxH = isSingleCol ? colW * 1.2 : colW;
+
+      for (let i = 0; i < tileEls.length; i++) {
+        const r = photoAspect(visiblePhotos[i]);
+        let w = Math.sqrt(targetArea * r);
+        let h = Math.sqrt(targetArea / r);
+        const scale = Math.min(1, colW / w, maxH / h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+
+        const tile = tileEls[i];
+        tile.style.width = `${w}px`;
+        tile.style.height = `${h}px`;
       }
     }
 
@@ -469,6 +392,9 @@
       emptyEl.hidden = true;
 
       visiblePhotos.forEach((photo, idx) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
         const tile = document.createElement('button');
         tile.type = 'button';
         tile.className = 'tile';
@@ -484,7 +410,8 @@
 
         tile.appendChild(img);
         tile.addEventListener('click', () => openLightbox(idx));
-        galleryEl.appendChild(tile);
+        cell.appendChild(tile);
+        galleryEl.appendChild(cell);
         tileEls.push(tile);
       });
 
