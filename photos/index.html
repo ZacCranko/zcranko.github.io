@@ -270,25 +270,32 @@
       position: fixed;
       top: max(22px, env(safe-area-inset-top));
       left: max(24px, env(safe-area-inset-left));
-      font-size: 13px;
+      font-size: 14px;
+      line-height: 1;
       letter-spacing: -0.006em;
       color: var(--ink-tertiary);
-      font-variant-numeric: tabular-nums;
       user-select: none;
       pointer-events: none;
     }
 
     .lb-close {
       position: fixed;
-      top: max(14px, env(safe-area-inset-top));
-      right: max(18px, env(safe-area-inset-right));
+      top: max(22px, env(safe-area-inset-top));
+      right: max(24px, env(safe-area-inset-right));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 14px;
+      padding: 12px;
+      margin: -12px;
+      box-sizing: content-box;
       background: none;
       border: none;
-      color: var(--ink-secondary);
-      font-size: 26px;
+      font-family: inherit;
+      color: var(--ink-tertiary);
+      font-size: 19px;
       line-height: 1;
       cursor: pointer;
-      padding: 6px 10px;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -302,6 +309,7 @@
       transform: translateY(-50%);
       background: none;
       border: none;
+      font-family: inherit;
       color: var(--ink-tertiary);
       font-size: 28px;
       cursor: pointer;
